@@ -961,7 +961,6 @@ function formatDuration(ms) {
 //	if (db.data.settings[botNumber].autobio) {
             // XeonBotInc.updateProfileStatus(`${botname} Have Been Running For ${runtime(process.uptime())}`).catch(_ => _)
      //   }
-                XeonBotInc.public = false
 
         // Grup Only
         if (!m.isGroup && !XeonTheCreator && db.data.settings[botNumber].onlygrub ) {

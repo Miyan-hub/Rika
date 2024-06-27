@@ -28,7 +28,7 @@ global.packname = `Karika`
 
 global.author = ``
 global.creator = "6288808069211@s.whatsapp.net"
-global.xprefix = '!'
+global.xprefix = '.'
 global.premium = ["6288808069211"] // Premium User
 global.hituet = 0
 
