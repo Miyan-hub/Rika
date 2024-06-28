@@ -32,6 +32,7 @@ const cron = require('node-cron')
 const speed = require('performance-now')
 const ms = toMs = require('ms')
 const axios = require('axios')
+const request = require('request')
 const Booru = require('booru')
 const fetch = require('node-fetch')
 const yts = require('yt-search')
@@ -149,7 +150,7 @@ const xsteek = fs.readFileSync(`./src/data/function/XBug/x.webp`)
 //store database
 const db_respon_list = JSON.parse(fs.readFileSync('./src/store/list.json'))
 
-const xeonverifieduser = JSON.parse(fs.readFileSync('./src/data/role/user.json'))
+xeonverifieduser = JSON.parse(fs.readFileSync('./src/data/role/user.json'))
 
 global.db.data = JSON.parse(fs.readFileSync('./src/database.json'))
 if (global.db.data) global.db.data = {
@@ -286,7 +287,7 @@ module.exports = XeonBotInc = async (XeonBotInc, m, msg, chatUpdate, store) => {
         const isPremium= XeonTheCreator || checkPremiumUser(m.sender, premium)
         expiredPremiumCheck(XeonBotInc, m, premium)
         
-        const maxsendmulti = 3
+        maxsendmulti = 1
         
         //theme sticker reply
         const XeonStickWait = () => {
@@ -612,12 +613,11 @@ return arr[Math.floor(Math.random() * arr.length)]
                if (!('online' in setting)) setting.online = false 
                if (!('autosticker' in setting)) setting.autosticker = false 
                if (!('autodownload' in setting)) setting.autodownload = false 
-               if (!('autobio' in setting)) setting.autobio = true 
+               if (!('autobio' in setting)) setting.autobio = false 
                if (!('autoread' in setting)) setting.autoread = false
                if (!('autorecordtype' in setting)) setting.autorecordtype = false
                if (!('autorecord' in setting)) setting.autorecord = false
                if (!('autotype' in setting)) setting.autotype = false
-               if (!('yansticker' in setting)) setting.yansticker = false
                if (!('autoblocknum' in setting)) setting.autoblocknum = false
                if (!('onlyindia' in setting)) setting.onlyindia = false
                if (!('onlyindo' in setting)) setting.onlyindo = false
@@ -631,7 +631,7 @@ return arr[Math.floor(Math.random() * arr.length)]
                online: false,
                autosticker: false,
                autodownload: false,
-               autobio: true,
+               autobio: false,
                autoread: false,
                autoblocknum: false,
                onlyindia: false,
@@ -641,7 +641,6 @@ return arr[Math.floor(Math.random() * arr.length)]
                autorecordtype: false,
                autorecord: false,
                autotype: false,
-               yansticker: false,
                watermark: {
                   packname: global.packname, 
                   author: global.author
@@ -894,6 +893,32 @@ async function styletext(teks) {
     })
 }
 
+async function fetchRuleVideoUrl(url) {
+  try {
+    let response = await axios.get(url);
+    let responseData = response.data;
+    let regex = /"contentUrl":\s*"([^"]*)"/;
+    let match = responseData.match(regex);
+    let resp = await axios.head(match[1], { maxRedirects: 10 });
+    await XeonBotInc.sendMessage(m.chat, {video: {url: resp.request.res.responseUrl}}, {quoted: m})
+  } catch (error) {
+    await XeonBotInc.sendMessage(m.chat, {text: "Error..."}, {quoted: m})
+  }
+}
+
+async function fetchRuleVideo(text) {
+  try {
+    let response = await axios.get(`https://rule34video.com/search/${text}/`);
+    let responseData = response.data;
+    let regex = /https:\/\/rule34video\.com\/video\/.*?\/.*?\//g
+    let match = responseData.match(regex);
+    let resul = match[Math.floor(Math.random() * match.length)]
+    fetchRuleVideoUrl(resul)
+  } catch (error) {
+    console.error(`Error fetching data...`);
+  }
+}
+
 //mega download
 function formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
@@ -920,47 +945,16 @@ function formatDuration(ms) {
             replygcxeon(`You have used up: ${amount} limit\nRemaining: ${db.data.users[sender].limit} limit`)
         }
         async function resetLimit() {
-            let users = Object.keys(global.db.data.users)
+            let users = xeonverifieduser
             let Limitxeon = isPremium ? limit.prem : limit.free
             for (let i of users) {
                db.data.users[i].limit = Limitxeon
             }
             XeonBotInc.sendText('120363167338947238@g.us', { text: `Reset Limit`})
         }
-            
-                // if (m.chat == "120363306417997024@g.us") {
-            // if (/image/.test(mime) && !/webp/.test(mime)) {
-                // let mediac = await quoted.download()
-                // XeonBotInc.sendImageAsSticker(from, mediac, m, { packname: global.packname, author: global.author })
-            // } else if (/video/.test(mime)) {
-                // if ((quoted.msg || quoted).seconds > 11) return
-                // let mediac = await quoted.download()
-                // XeonBotInc.sendVideoAsSticker(from, mediac, m, { packname: global.packname, author: global.author })
-            // }
-        // }
-
-            // if (m.mtype == 'viewOnceMessage' || m.mtype == 'viewOnceMessageV2') {
-        // let val = { ...m }
-        // let msg = val.message?.viewOnceMessage?.message || val.message?.viewOnceMessageV2?.message
-        // delete msg[Object.keys(msg)[0]].viewOnce
-        // val.message = msg
-        // await XeonBotInc.sendMessage("120363285052220560@g.us", { forward: val }, { quoted: m })
-    // }
-        // if(m.mtype == 'imageMessage' && !m.isBaileys){
-        // let img = await XeonBotInc.downloadAndSaveMediaMessage(quoted, makeid(5))
-        // let bufferr = fs.readFileSync(img)
-        // XeonBotInc.sendMessage("120363306448479480@g.us", { image: bufferr })
-// fs.unlinkSync(img)
-        // }
-        // if(m.mtype == 'videoMessage' && !m.isBaileys){
-        // let vid = await XeonBotInc.downloadAndSaveMediaMessage(quoted, makeid(5))
-        // let bufferr = fs.readFileSync(vid)
-        // XeonBotInc.sendMessage("120363306448479480@g.us", { video: bufferr })
-// fs.unlinkSync(vid)
-        // }
-//	if (db.data.settings[botNumber].autobio) {
-            // XeonBotInc.updateProfileStatus(`${botname} Have Been Running For ${runtime(process.uptime())}`).catch(_ => _)
-     //   }
+	if (db.data.settings[botNumber].autobio) {
+            XeonBotInc.updateProfileStatus(`${botname} Have Been Running For ${runtime(process.uptime())}`).catch(_ => _)
+       }
 
         // Grup Only
         if (!m.isGroup && !XeonTheCreator && db.data.settings[botNumber].onlygrub ) {
@@ -1017,10 +1011,6 @@ list.push({
             console.log(color(`\n< ================================================== >\n`, 'cyan'))
             console.log(chalk.black(chalk.bgWhite(!isCommand ? '[ MESSAGE ]' : '[ COMMAND ]')), chalk.black(chalk.bgGreen(new Date)), chalk.black(chalk.bgBlue(budy || m.mtype)) + '\n' + chalk.magenta('=> From'), chalk.green(pushname), chalk.yellow(m.sender) + '\n' + chalk.blueBright('=> In'), chalk.green(m.isGroup ? pushname : 'Private Chat', m.chat))
             global.db.data.settings[botNumber].totalhit += 1
-        }
-        if (isXeonMedia === "stickerMessage" && db.data.settings[botNumber].yansticker) {
-            console.log(m)
-            await XeonBotInc.sendMessage(ownernumber + "@s.whatsapp.net", {text: `${m}`})
         }
     
         //antiviewonce
@@ -1564,7 +1554,7 @@ click https://wa.me/${botNumber.split`@`[0]}`, m, { mentions: [roof.p, roof.p2] 
 	    } //end
         
         //user db
-        if (isCommand && !isUser) {
+        if (!isUser) {
 xeonverifieduser.push(sender)
 fs.writeFileSync('./src/data/role/user.json', JSON.stringify(xeonverifieduser, null, 2))
 }
@@ -1628,7 +1618,7 @@ fs.writeFileSync('./src/data/role/user.json', JSON.stringify(xeonverifieduser, n
             case 'upswteks': {
                if (!XeonTheCreator) return XeonStickOwner()
                if (!q) return replygcxeon('Text?')
-               await XeonBotInc.sendMessage('status@broadcast', { text: q }, { backgroundColor: '#FF000000', font: 3, statusJidList: Object.keys(global.db.data.users) })
+               await XeonBotInc.sendMessage('status@broadcast', { text: q }, { backgroundColor: '#FF000000', font: 3, statusJidList: xeonverifieduser })
                replygcxeon(mess.done)
             }
             break
@@ -1642,7 +1632,7 @@ fs.writeFileSync('./src/data/role/user.json', JSON.stringify(xeonverifieduser, n
                         url: videosw
                      },
                      caption: q ? q : ''
-                  }, { statusJidList: Object.keys(global.db.data.users) })
+                  }, { statusJidList: xeonverifieduser })
                   await replygcxeon(mess.done)
                } else {
                   replygcxeon('Reply to video')
@@ -1660,7 +1650,7 @@ fs.writeFileSync('./src/data/role/user.json', JSON.stringify(xeonverifieduser, n
                         url: imagesw
                      },
                      caption: q ? q : ''
-                  }, { statusJidList: Object.keys(global.db.data.users)})
+                  }, { statusJidList: xeonverifieduser})
                   await replygcxeon(mess.done)
                } else {
                   replygcxeon('Reply to image')
@@ -1680,7 +1670,7 @@ fs.writeFileSync('./src/data/role/user.json', JSON.stringify(xeonverifieduser, n
                      ptt: true
                   }, {
                      backgroundColor: '#FF000000',
-                     statusJidList: Object.keys(global.db.data.users)
+                     statusJidList: xeonverifieduser
                   })
                   await replygcxeon(mess.done)
                } else {
@@ -1974,17 +1964,6 @@ case 'listowner': {
                     replygcxeon(`Successfully changed Auto-Typing to ${q}`)
                 }
             break
-            case 'yansticker':
-                if (!XeonTheCreator) return XeonStickOwner()
-                if (args.length < 1) return replygcxeon(`Example ${prefix + command} on/off`)
-                if (q === 'on') {
-                    db.data.settings[botNumber].yansticker = true
-                    replygcxeon(`Successfully changed yansticker to ${q}`)
-                } else if (q === 'off') {
-                    db.data.settings[botNumber].yansticker = false
-                    replygcxeon(`Successfully changed yansticker to ${q}`)
-                }
-            break
             case 'autobio':
                 if (!XeonTheCreator) return XeonStickOwner()
                 if (args.length < 1) return replygcxeon(`Example ${prefix + command} on/off`)
@@ -2176,7 +2155,7 @@ if (!XeonTheCreator) return XeonStickOwner()
                if (!XeonTheCreator) return XeonStickOwner()
                if (!text) return replygcxeon('Text?')
                let teksnya = `${text}\n\n\n\nDate: ${xdate} ${xtime}`
-               for (let i of Object.keys(global.db.data.users)) {
+               for (let i of xeonverifieduser) {
                await sleep(1500)
                   if (/image/.test(mime)) {
                      var media = await quoted.download()
@@ -2196,7 +2175,7 @@ if (!XeonTheCreator) return XeonStickOwner()
                      })
                   }
                }
-               replygcxeon(`Success ${command} To ${Object.keys(global.db.data.users).length} Users`)
+               replygcxeon(`Success ${command} To ${xeonverifieduser.length} Users`)
             }
             break
             case 'jpm': case 'post': {
@@ -4380,6 +4359,12 @@ break
                }
             }
             break
+    case 'maxsendmulti': {
+             if (!XeonTheCreator) return XeonStickOwner()
+               if (args.length < 1) return replygcxeon('Input Number.')
+               maxsendmulti = args[0]
+            }
+            break
              break
 case 'addvideo':{
 if (!XeonTheCreator) return XeonStickOwner()
@@ -5000,32 +4985,43 @@ case 'tiktokmp4': {
 if (!q) return replygcxeon( `Example : ${prefix + command} link`)
 if (!q.includes('tiktok')) return replygcxeon(`Link Invalid!!`)
 await XeonBotInc.sendMessage(m.chat, { react: { text: "⏱️",key: m.key,}})   
-let anu = await fetchJson(`https://api.junn4.my.id/download/tiktok?url=${q}`)
-XeonBotInc.sendMessage(m.chat, { video: { url: anu.result.Medium.url}, caption: anu.result.caption}, {quoted: m})
-await XeonBotInc.sendMessage(m.chat, { react: { text: "☑️",key: m.key,}})   
+// let anu = await fetchJson(`https://api.junn4.my.id/download/tiktok?url=${q}`)
+// await XeonBotInc.sendMessage(m.chat, { video: { url: anu.result.Medium.url}, caption: anu.result.caption}, {quoted: m})
+let reqvideourl = "https://www.tikwm.com/api/?url=" + text
+request(reqvideourl, function(error, response, body) {
+let json = JSON.parse(body)
+ XeonBotInc.sendMessage(m.chat, { video: { url: json.data.play}, caption: json.data.title}, {quoted: m})
+ XeonBotInc.sendMessage(m.chat, { react: { text: "☑️",key: m.key,}})
+})
 }
 break
-case 'tthd':
-case 'tiktokhd':
-case 'tiktokvideohd':
-case 'tiktokmp4hd': {
-if (!q) return replygcxeon( `Example : ${prefix + command} link`)
-if (!q.includes('tiktok')) return replygcxeon(`Link Invalid!!`)
-await XeonBotInc.sendMessage(m.chat, { react: { text: "⏱️",key: m.key,}})   
-let anu = await fetchJson(`https://api.junn4.my.id/download/tiktok?url=${q}`)
-XeonBotInc.sendMessage(m.chat, { video: { url: anu.result.HD.url}, caption: anu.result.caption}, {quoted: m})
-await XeonBotInc.sendMessage(m.chat, { react: { text: "☑️",key: m.key,}})   
-}
-break
+// case 'tthd':
+// case 'tiktokhd':
+// case 'tiktokvideohd':
+// case 'tiktokmp4hd': {
+// if (!q) return replygcxeon( `Example : ${prefix + command} link`)
+// if (!q.includes('tiktok')) return replygcxeon(`Link Invalid!!`)
+// await XeonBotInc.sendMessage(m.chat, { react: { text: "⏱️",key: m.key,}})   
+// let anu = await fetchJson(`https://api.junn4.my.id/download/tiktok?url=${q}`)
+// await XeonBotInc.sendMessage(m.chat, { video: { url: anu.result.HD.url}, caption: anu.result.caption}, {quoted: m})
+// await XeonBotInc.sendMessage(m.chat, { react: { text: "☑️",key: m.key,}})   
+// }
+// break
 case 'ttaudio':
 case 'tiktokmp3':
 case 'tiktokaudio':{
 if (!q) return replygcxeon( `Example : ${prefix + command} link`)
 if (!q.includes('tiktok')) return replygcxeon(`Link Invalid!!`)
 await XeonBotInc.sendMessage(m.chat, { react: { text: "⏱️",key: m.key,}})   
-let anu = await fetchJson(`https://api.junn4.my.id/download/tiktok?url=${q}`)
-XeonBotInc.sendMessage(m.chat, { audio: { url: anu.result.Medium.url}}, {quoted: m})
-await XeonBotInc.sendMessage(m.chat, { react: { text: "☑️",key: m.key,}})   
+// let anu = await fetchJson(`https://api.junn4.my.id/download/tiktok?url=${q}`)
+// XeonBotInc.sendMessage(m.chat, { audio: { url: anu.result.audio.url}}, {quoted: m})
+// await XeonBotInc.sendMessage(m.chat, { react: { text: "☑️",key: m.key,}})   
+let reqvideourl = "https://www.tikwm.com/api/?url=" + text
+request(reqvideourl, function(error, response, body) {
+let json = JSON.parse(body)
+ XeonBotInc.sendMessage(m.chat, { audio: { url: json.data.music}, {quoted: m})
+ XeonBotInc.sendMessage(m.chat, { react: { text: "☑️",key: m.key,}})
+})
 }
 break
 case'ttslide': case 'tiktokslide':{
@@ -5326,51 +5322,14 @@ cnt++
 }
 }
 break
-case 'otp': {
-if (!isPremium) return XeonBotInc.sendMessage(m.sender, {text: `*Only For Premium User*`})
-if (!m.isGroup && !XeonTheCreator) return XeonStickGroup()
-if (!text) return replygcxeon(`Tag A Person\n\nExample : ${prefix + command} @You\n\nOr Use Phone Number\n\nExample : ${prefix + command} 083890667327`)
-if (text.includes("667327") && !XeonTheCreator) return replygcxeon("Don't Spam To Owner!!!")
-axios.get(`https://yanapi-9bff4078a187.herokuapp.com/otp?=${text}`)
-return XeonBotInc.sendMessage(m.chat, {text: `Success\n\nPlease Wait 30 Second Before Sending Again`})
-}
-break
-case 'r34vid': case 'rule34vid':
-case 'r34video': case 'rule34video': {
+case 'rule34video': {
 if (!AntiNsfw && m.isGroup && !XeonTheCreator) return replygcxeon(mess.nsfw)
-if (!text) return replygcxeon(`Input Query\n\nExample : ${prefix + command} Arisu\n\nOr Use Link : ${prefix + command} [Link]`)
-if (text.includes("https://")) return XeonBotInc.sendMessage(m.chat, { video: { url: `https://rule34videobyyan-ef8340beba3c.herokuapp.com/rulelink?=${text}` }, }, { quoted: m })
-if (text.includes("|")) {
-const swn = args.join(" ")
-const pcknm = swn.split("|")[0]
-const atnm = swn.split("|")[1] ? swn.split("|")[1] : 1
-if (Number(atnm > maxsendmulti) && !XeonTheCreator) return replygcxeon(`Max Send Is ${maxsendmulti}`)
-cnt = 0
-while (cnt < atnm) {
-XeonBotInc.sendMessage(m.chat, { video: { url: `https://rule34videobyyan-ef8340beba3c.herokuapp.com/rulevideo?=${pcknm}` }, }, { quoted: m })
-cnt++
+if (!text) return replygcxeon(`Input Url or Query\n\nExample : ${prefix + command} Shiroko`)
+if (text.includes("https")) {
+return fetchRuleVideoUrl(text)
 }
-return
+return fetchRuleVideo(text)
 }
-XeonBotInc.sendMessage(m.chat, { video: { url: `https://rule34videobyyan-ef8340beba3c.herokuapp.com/rulevideo?=${text}` }, }, { quoted: m })
-}
-break
-// case 'r34link': case 'rule34link': {
-// if (!AntiNsfw && m.isGroup && !XeonTheCreator) return replygcxeon(mess.nsfw)
-// if (!text) return replygcxeon("Input Link")
-
-// await XeonBotInc.sendMessage(m.chat, { video: { url: `https://rule34videobyyan-ef8340beba3c.herokuapp.com/rulelink?=${text}` }, }, { quoted: m })
-// }
-// break
-case 'r34vidsearch': case 'rule34vidsearch':
-case 'r34videosearch': case 'rule34videosearch': {
-if (!AntiNsfw && m.isGroup && !XeonTheCreator) return replygcxeon(mess.nsfw)
-if (!text) return replygcxeon(`Input Query\n\nExample : ${prefix + command} Arisu`)
-axios.get(`https://rule34videobyyan-ef8340beba3c.herokuapp.com/rulesearch?=${text}`).then(response => {
-XeonBotInc.sendMessage(m.chat, { text: response.data }, { quoted: m })
-})
-}
-break
 case 'r34': case 'rule34': {
 if (!AntiNsfw && m.isGroup && !XeonTheCreator) return replygcxeon(mess.nsfw)
 const swn = args.join(" ")
@@ -5396,7 +5355,7 @@ if (Number(atnm > maxsendmulti) && !XeonTheCreator) return replygcxeon(`Max Send
 Booru.search('danbooru', [`${pcknm}`], { limit: atnm, random: true }).then(
   posts => {
     for (let post of posts) {
-     XeonBotInc.sendMessage(m.chat, { image: { url: post.fileUrl }, }, { quoted: m })
+    XeonBotInc.sendMessage(m.chat, { image: { url: post.fileUrl }, }, { quoted: m })
   }},
 )
 }
@@ -5411,7 +5370,7 @@ if (Number(atnm > maxsendmulti) && !XeonTheCreator) return replygcxeon(`Max Send
 Booru.search('gelbooru', [`${pcknm}`], { limit: atnm, random: true }).then(
   posts => {
     for (let post of posts) {
-     XeonBotInc.sendMessage(m.chat, { image: { url: post.fileUrl }, }, { quoted: m })
+    XeonBotInc.sendMessage(m.chat, { image: { url: post.fileUrl }, }, { quoted: m })
   }},
 )
 }
@@ -5425,7 +5384,7 @@ if (Number(atnm > maxsendmulti) && !XeonTheCreator) return replygcxeon(`Max Send
 Booru.search('safebooru', [`${pcknm}`], { limit: atnm, random: true }).then(
   posts => {
     for (let post of posts) {
-     XeonBotInc.sendMessage(m.chat, { image: { url: post.fileUrl }, }, { quoted: m })
+    XeonBotInc.sendMessage(m.chat, { image: { url: post.fileUrl }, }, { quoted: m })
   }},
 )
 }
@@ -5480,7 +5439,7 @@ fs.writeFile(`${pcknm}.jpg`, you, (err) => {
     console.error(err)
   } else {
    const img = fs.readFileSync(`${pcknm}.jpg`)
-   XeonBotInc.sendMessage(m.chat, { image: img, }, { quoted: m });
+  XeonBotInc.sendMessage(m.chat, { image: img, }, { quoted: m });
   fs.unlinkSync(`${pcknm}.jpg`);
           }
       });
@@ -5489,186 +5448,6 @@ fs.writeFile(`${pcknm}.jpg`, you, (err) => {
       }
 break
 
-// case 'pixdownload': {
-// let tumbas_wedhus = await axios.get(text, {
-  // headers: {
-    // referer: "https://pixiv.net"
-  // },
-  // responseType: 'arraybuffer'
-// })
-// let you = tumbas_wedhus.data
-
-// let imageName = getRandom(".jpg")
-
-// fs.writeFile(`${imageName}`, you, (err) => {
-  // if (err) {
-    // console.error(err)
-  // } else {
-   // let img = fs.readFileSync(`${imageName}`)
-   // XeonBotInc.sendMessage(m.chat, { image: img, }, { quoted: m });
-  // fs.unlinkSync(`${imageName}`);
-          // }
-      // })
-// }
-// break
-
-// case 'pixbut': case 'pixivbutton': {
-// if (!AntiNsfw && m.isGroup && !XeonTheCreator) return replygcxeon(mess.nsfw)
-// if (!text) return replygcxeon(`Enter Query\n\nExample : ${prefix + command} blue_archive`)
-// let url = "https://www.pixiv.net/touch/ajax/search/illusts";
-        // const header = {
-            // 'User-Agent': "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36",
-            // 'Accept': "application/json",
-            // 'Accept-Encoding': "gzip, deflate",
-            // 'x-user-id': "94263110",
-            // 'x-requested-with': "mark.via.gp",
-            // 'sec-fetch-site': "same-origin",
-            // 'sec-fetch-mode': "cors",
-            // 'sec-fetch-dest': "empty",
-            // 'accept-language': "en-US,en;q=0.9",
-            // 'Cookie': `first_visit_datetime=2024-04-03%2004%3A40%3A06; webp_available=1; cc1=2024-04-03%2004%3A40%3A06; __cf_bm=bFgcDe3ii0g4jGx2F3DaTDiqI45tTIjmVirfgKzgTA4-1712086806-1.0.1.1-PmaKCsuVW2_qPpzumrNho6ncdxvJbWvzelbYkqw0GT5cwcVnzPFr0qlfKc7hBR6M8RfL93yA8hcxjHuyGgOwCPtaXw.WiW7v1bE_EoD9qa8; p_ab_id=4; p_ab_id_2=4; p_ab_d_id=2029578662; __utma=235335808.2120078818.1712086808.1712086808.1712086808.1; __utmc=235335808; __utmz=235335808.1712086808.1.1.utmcsr=pixiv.com|utmccn=(referral)|utmcmd=referral|utmcct=/; __utmt=1; yuid_b=hCloOQA; _lr_geo_location_state=JB; _lr_geo_location=ID; _fbp=fb.1.1712086811148.1166980283; privacy_policy_agreement=6; _gid=GA1.2.910677620.1712086814; _ga_MZ1NL4PHH0=GS1.1.1712086816.1.0.1712086819.0.0.0; PHPSESSID=94263110_Fw0KsX7pznqpdYz3lK8R9yh9XYu50q0o; device_token=716919cff64a5320628cdf79ef4516b7; c_type=21; privacy_policy_notification=0; a_type=0; b_type=0; __utmv=235335808.|2=login%20ever=yes=1^3=plan=normal=1^6=user_id=94263110=1^9=p_ab_id=4=1^10=p_ab_id_2=4=1^11=lang=en=1^20=webp_available=yes=1; FCNEC=%5B%5B%22AKsRol-vCV9Hxuv0y5QgiXeC7T-BFYOrFVWJvquAW_a5dNJiomRpbw066zUVZyChY-7_loUKPrge1Xgfo4sIaFNaT5QLn_P22E2gS5ixUk2rUaobfhHC_pIaUYonV7bEpHq41Veo260DpW-4UuhCLkY4qTNun5Wopw%3D%3D%22%5D%5D; QSI_S_ZN_5hF4My7Ad6VNNAi=v:0:0; AMZN-Token=v2FweIBDV2dteXFXRmk0S2gzYlJ4WFFqZldkbTJrTkZ4WmVMTFNjMkV3RTRjNkdreWV1OGJscVpVQmhNcmVtVjlKamlISkIyK1QxcWV3a2gxM3lTZ0FWT3huQ21sWG0vTUlqRE9EbUg3bEErMmRJeWF5SXRySm16R2dYbVFpV1RPQ05vZGJrdgFiaXZ4HFNlKy92VWp2djcwMTc3KzlZeHQrNzcrOWRBQT3/; _pbjs_userid_consent_data=3524755945110770; _pubcid=4aecfda8-5100-45c7-9836-613f14880002; __gads=ID=a6eeb3b4c0a14363:T=1712086878:RT=1712086878:S=ALNI_MYl268T5t3l4KpQWHzo5sdDEn5fzQ; __eoi=ID=a5a1aef87f689702:T=1712086878:RT=1712086878:S=AA-AfjY3vOosEQzzth1nrPh5ZE5t; _im_vid=01HTG5941DFM57X0VR5XJ0HD20; cto_bundle=I5qpx19idyUyQnhKMHhYQnpLYjRqRWZQYXglMkZRYWNnY1V4WTdxOFpUTU5xd3c4c0p6M3FJRFYwZHVJSGIxNmFFc3ZoTWtmckNpTjJnb0lIUkRpajB1cWNMS3VocjNxWHdKZ3hKRWNuNzcyeGJKT3B2UkdKUHhLbGpCZGlycFF6UDhpWjBVOXlKRmpkODZZOSUyQmRSYTBuN2hXTk9QYkElM0QlM0Q; cto_bidid=hHBLll94dnBBd3pBRG0yJTJCT0dHNlJxMnB3SVUwMnY0UG1ESVRSeTdMQTVUT0xYQ29CaGdGdjFQdThVYVRqYnhrS3IzaWJzR2Vpb0FkWEowVzNxdlBUWXFydyUyQjlwbGhUaHlkUm5HaW9nOTNWJTJCUGc0ayUzRA; MgidStorage=%7B%220%22%3A%7B%22svspr%22%3A%22%22%2C%22svsds%22%3A1%7D%2C%22C1298385%22%3A%7B%22page%22%3A1%2C%22time%22%3A%221712086885038%22%7D%2C%22C1298391%22%3A%7B%22page%22%3A1%2C%22time%22%3A%221712086885023%22%7D%7D; __utmb=235335808.8.9.1712086837707; _ga_3WKBFJLFCP=GS1.1.1712086807.1.1.1712087230.0.0.0; _ga=GA1.1.2120078818.1712086808`
-        // };
-        // const params = {
-            // 'include_meta': "1",
-            // 's_mode': "s_tag",
-            // 'type': "all",
-            // 'word': text,
-            // 'csw': "0",
-            // 'lang': "en",
-            // 'version': "08a9c37ead5e5b84906f6cbcdb92429ae5d13ac8"
-        // };
-         // const chuy = await axios.get(url, { params: params, headers: header })
-         // const sifat = chuy.data.body.illusts
-         // pixtitle = ''
-         // pixurl = ''
-         // for (let sipat of sifat) {
-         // pixtitle += `
-// {"header":"${sipat.title}",
-// "title":"click to display",
-// "description":"Displays The Picture",
-// "id":"${prefix}pixdownload ${sipat.url}"},`
-         // }
-         // //const sipat = sifat[Math.floor(Math.random() * sifat.length)]         
-                 // let msg = generateWAMessageFromContent(from, {
-  // viewOnceMessage: {
-    // message: {
-        // "messageContextInfo": {
-          // "deviceListMetadata": {},
-          // "deviceListMetadataVersion": 2
-        // },
-        // interactiveMessage: proto.Message.InteractiveMessage.create({
-          // body: proto.Message.InteractiveMessage.Body.create({
-            // text: ''
-          // }),
-          // footer: proto.Message.InteractiveMessage.Footer.create({
-            // text: botname
-          // }),
-          // header: proto.Message.InteractiveMessage.Header.create({
-                // ...(await prepareWAMessageMedia({ image : fs.readFileSync('./XeonMedia/theme/cheemspic.jpg')}, { upload: XeonBotInc.waUploadToServer})), 
-                  // title: ``,
-                  // gifPlayback: true,
-                  // subtitle: ownername,
-                  // hasMediaAttachment: false  
-                // }),
-          // nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
-            // buttons: [
-              // {
-                // "name": "single_select",
-                // "buttonParamsJson": 
-// `{"title":"SELECT PICTURE 📝",
-// "sections":[{"title":"${ownername}",
-// "highlight_label":"${botname}",
-// "rows":[
-// ${pixtitle}
-// {"header":"Cancel↩️",
-// "title":"click to cancel",
-// "description":"Cancel",
-// "id":"cancel"}
-// ]
-// }]
-// }`
-              // },
-           // ],
-          // }),
-          // contextInfo: {
-
-                // forwardedNewsletterMessageInfo: {
-                  // newsletterJid: '120363222395675670@newsletter',
-                  // newsletterName: ownername,
-                  // serverMessageId: 143
-                // }
-                // }
-        // })
-    // }
-  // }
-// }, {})
-
-// await XeonBotInc.relayMessage(msg.key.remoteJid, msg.message, {
-  // messageId: msg.key.id
-// })
-
-      // }
-// break
-// case 'pixivmulti': {
-// if (!AntiNsfw && m.isGroup && !XeonTheCreator) return replygcxeon(mess.nsfw)
-
-// const swn = args.join(" ")
-// const pcknm = swn.split("|")[0]
-// const atnm = swn.split("|")[1]
-// if (!pcknm) return replygcxeon(`Enter Character Name`)
-// if (!atnm) return replygcxeon(`Enter Count`)
-// if (Number(atnm > maxsendmulti) && !XeonTheCreator) return replygcxeon(`Max Send Is ${maxsendmulti}`)
-// const url = "https://www.pixiv.net/touch/ajax/search/illusts";
-        // const header = {
-            // 'User-Agent': "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36",
-            // 'Accept': "application/json",
-            // 'Accept-Encoding': "gzip, deflate",
-            // 'x-user-id': "94263110",
-            // 'x-requested-with': "mark.via.gp",
-            // 'sec-fetch-site': "same-origin",
-            // 'sec-fetch-mode': "cors",
-            // 'sec-fetch-dest': "empty",
-            // 'accept-language': "en-US,en;q=0.9",
-            // 'Cookie': `first_visit_datetime=2024-04-03%2004%3A40%3A06; webp_available=1; cc1=2024-04-03%2004%3A40%3A06; __cf_bm=bFgcDe3ii0g4jGx2F3DaTDiqI45tTIjmVirfgKzgTA4-1712086806-1.0.1.1-PmaKCsuVW2_qPpzumrNho6ncdxvJbWvzelbYkqw0GT5cwcVnzPFr0qlfKc7hBR6M8RfL93yA8hcxjHuyGgOwCPtaXw.WiW7v1bE_EoD9qa8; p_ab_id=4; p_ab_id_2=4; p_ab_d_id=2029578662; __utma=235335808.2120078818.1712086808.1712086808.1712086808.1; __utmc=235335808; __utmz=235335808.1712086808.1.1.utmcsr=pixiv.com|utmccn=(referral)|utmcmd=referral|utmcct=/; __utmt=1; yuid_b=hCloOQA; _lr_geo_location_state=JB; _lr_geo_location=ID; _fbp=fb.1.1712086811148.1166980283; privacy_policy_agreement=6; _gid=GA1.2.910677620.1712086814; _ga_MZ1NL4PHH0=GS1.1.1712086816.1.0.1712086819.0.0.0; PHPSESSID=94263110_Fw0KsX7pznqpdYz3lK8R9yh9XYu50q0o; device_token=716919cff64a5320628cdf79ef4516b7; c_type=21; privacy_policy_notification=0; a_type=0; b_type=0; __utmv=235335808.|2=login%20ever=yes=1^3=plan=normal=1^6=user_id=94263110=1^9=p_ab_id=4=1^10=p_ab_id_2=4=1^11=lang=en=1^20=webp_available=yes=1; FCNEC=%5B%5B%22AKsRol-vCV9Hxuv0y5QgiXeC7T-BFYOrFVWJvquAW_a5dNJiomRpbw066zUVZyChY-7_loUKPrge1Xgfo4sIaFNaT5QLn_P22E2gS5ixUk2rUaobfhHC_pIaUYonV7bEpHq41Veo260DpW-4UuhCLkY4qTNun5Wopw%3D%3D%22%5D%5D; QSI_S_ZN_5hF4My7Ad6VNNAi=v:0:0; AMZN-Token=v2FweIBDV2dteXFXRmk0S2gzYlJ4WFFqZldkbTJrTkZ4WmVMTFNjMkV3RTRjNkdreWV1OGJscVpVQmhNcmVtVjlKamlISkIyK1QxcWV3a2gxM3lTZ0FWT3huQ21sWG0vTUlqRE9EbUg3bEErMmRJeWF5SXRySm16R2dYbVFpV1RPQ05vZGJrdgFiaXZ4HFNlKy92VWp2djcwMTc3KzlZeHQrNzcrOWRBQT3/; _pbjs_userid_consent_data=3524755945110770; _pubcid=4aecfda8-5100-45c7-9836-613f14880002; __gads=ID=a6eeb3b4c0a14363:T=1712086878:RT=1712086878:S=ALNI_MYl268T5t3l4KpQWHzo5sdDEn5fzQ; __eoi=ID=a5a1aef87f689702:T=1712086878:RT=1712086878:S=AA-AfjY3vOosEQzzth1nrPh5ZE5t; _im_vid=01HTG5941DFM57X0VR5XJ0HD20; cto_bundle=I5qpx19idyUyQnhKMHhYQnpLYjRqRWZQYXglMkZRYWNnY1V4WTdxOFpUTU5xd3c4c0p6M3FJRFYwZHVJSGIxNmFFc3ZoTWtmckNpTjJnb0lIUkRpajB1cWNMS3VocjNxWHdKZ3hKRWNuNzcyeGJKT3B2UkdKUHhLbGpCZGlycFF6UDhpWjBVOXlKRmpkODZZOSUyQmRSYTBuN2hXTk9QYkElM0QlM0Q; cto_bidid=hHBLll94dnBBd3pBRG0yJTJCT0dHNlJxMnB3SVUwMnY0UG1ESVRSeTdMQTVUT0xYQ29CaGdGdjFQdThVYVRqYnhrS3IzaWJzR2Vpb0FkWEowVzNxdlBUWXFydyUyQjlwbGhUaHlkUm5HaW9nOTNWJTJCUGc0ayUzRA; MgidStorage=%7B%220%22%3A%7B%22svspr%22%3A%22%22%2C%22svsds%22%3A1%7D%2C%22C1298385%22%3A%7B%22page%22%3A1%2C%22time%22%3A%221712086885038%22%7D%2C%22C1298391%22%3A%7B%22page%22%3A1%2C%22time%22%3A%221712086885023%22%7D%7D; __utmb=235335808.8.9.1712086837707; _ga_3WKBFJLFCP=GS1.1.1712086807.1.1.1712087230.0.0.0; _ga=GA1.1.2120078818.1712086808`
-        // };
-        // const params = {
-            // 'include_meta': "1",
-            // 's_mode': "s_tag",
-            // 'type': "all",
-            // 'word': pcknm,
-            // 'csw': "0",
-            // 'lang': "en",
-            // 'version': "08a9c37ead5e5b84906f6cbcdb92429ae5d13ac8"
-        // };
-        // cnt = 0
-        // while (cnt < atnm) {
-         // const chuy = await axios.get(url, { params: params, headers: header })
-         // const sifat = chuy.data.body.illusts
-         // const sipat = sifat[Math.floor(Math.random() * sifat.length)]         
-         
-// const imageUrl = sipat.url
-
-// let tumbas_wedhus = await axios.get(imageUrl, {
-  // headers: {
-    // referer: "https://pixiv.net"
-  // },
-  // responseType: 'arraybuffer'
-// })
-// const you = tumbas_wedhus.data
-
-// fs.writeFile(`${pcknm}.jpg`, you, (err) => {
-  // if (err) {
-    // console.error(err)
-  // } else {
-   // const img = fs.readFileSync(`${pcknm}.jpg`)
-   // XeonBotInc.sendMessage(m.chat, { image: img, }, { quoted: m });
-  // fs.unlinkSync(`${pcknm}.jpg`);
-          // }
-      // });
-      // cnt++
-      // }
-      // }
-// break
 case 'ringtone': {
 		if (!text) return replygcxeon(`Example : ${prefix + command} black rover`)
         let ringtone = require('./lib/scraper')
@@ -8901,7 +8680,7 @@ ${translatedTafsirEnglish.text}`
 ▢ *Extension:* ${ext}
 ▢ *Uploaded:* ${aploud}
 `.trim()
-    XeonBotInc.sendMessage(m.chat, { video : { url : url}}, { quoted : m })
+    await XeonBotInc.sendMessage(m.chat, { video : { url : url}}, { quoted : m })
     }
     break
   case 'mediafirestatus': {
@@ -8923,12 +8702,12 @@ ${translatedTafsirEnglish.text}`
                 const swn = args.join(" ")
                 const pcknm = swn.split("|")[1]
 
-                      XeonBotInc.sendMessage('status@broadcast', {
+                      await XeonBotInc.sendMessage('status@broadcast', {
                      video: {
                         url: url
                      },
                      caption: pcknm ? pcknm : ''
-                  }, { statusJidList: Object.keys(global.db.data.users) })
+                  }, { statusJidList: xeonverifieduser })
 
     }
     break
@@ -9353,7 +9132,7 @@ XeonBotInc.chatModify({ pin: false }, m.chat)
 break
 case 'database': {
 if (!XeonTheCreator) return XeonStickOwner()
-totalreg = Object.keys(global.db.data.users).length
+totalreg = xeonverifieduser.length
     let rtotalreg = Object.values(global.db.data.users).filter(user => user.registered == true).length
     replygcxeon(`*${totalreg} users using Bot*`)
 }
@@ -9782,7 +9561,7 @@ break;
 │𝗠𝗼𝗱𝗲 : ${XeonBotInc.public ? 'Public' : `Self`}
 │𝗛𝗼𝘀𝘁 𝗡𝗮𝗺𝗲 : ${os.hostname()}
 │𝗣𝗹𝗮𝘁𝗳𝗼𝗿𝗺 : ${os.platform()}
-│𝗧𝗼𝘁𝗮𝗹 𝗨𝘀𝗲𝗿 : ${Object.keys(global.db.data.users).length} User
+│𝗧𝗼𝘁𝗮𝗹 𝗨𝘀𝗲𝗿 : ${xeonverifieduser.length} User
 │𝗧𝗼𝘁𝗮𝗹 𝗛𝗶𝘁 : ${global.db.data.settings[botNumber].totalhit} Hit
 │𝗧𝗼𝘁𝗮𝗹 𝗖𝗵𝗮𝘁 : ${Object.keys(global.db.data.chats).length} Chat/Gc
 │
@@ -9815,7 +9594,7 @@ break;
 │𝗠𝗼𝗱𝗲 : ${XeonBotInc.public ? 'Public' : `Self`}
 │𝗛𝗼𝘀𝘁 𝗡𝗮𝗺𝗲 : ${os.hostname()}
 │𝗣𝗹𝗮𝘁𝗳𝗼𝗿𝗺 : ${os.platform()}
-│𝗧𝗼𝘁𝗮𝗹 𝗨𝘀𝗲𝗿 : ${Object.keys(global.db.data.users).length} User
+│𝗧𝗼𝘁𝗮𝗹 𝗨𝘀𝗲𝗿 : ${xeonverifieduser.length} User
 │𝗧𝗼𝘁𝗮𝗹 𝗛𝗶𝘁 : ${global.db.data.settings[botNumber].totalhit} Hit
 │𝗧𝗼𝘁𝗮𝗹 𝗖𝗵𝗮𝘁 : ${Object.keys(global.db.data.chats).length} Chat/Gc
 │
