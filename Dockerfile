@@ -8,10 +8,12 @@ RUN apt-get update && \
   apt-get upgrade -y && \
   rm -rf /var/lib/apt/lists/*
 
+COPY package.json .
+
+RUN npm install && npm install qrcode-terminal
+
 COPY . .
 
-RUN npm install || yarn install
+EXPOSE 3000
 
-EXPOSE 1000
-
-CMD ["npm","start" ] 
+CMD ["node", "index.js", "--server"]
