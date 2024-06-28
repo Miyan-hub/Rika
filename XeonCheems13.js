@@ -5019,7 +5019,7 @@ await XeonBotInc.sendMessage(m.chat, { react: { text: "⏱️",key: m.key,}})
 let reqvideourl = "https://www.tikwm.com/api/?url=" + text
 request(reqvideourl, function(error, response, body) {
 let json = JSON.parse(body)
- XeonBotInc.sendMessage(m.chat, { audio: { url: json.data.music}, {quoted: m})
+ XeonBotInc.sendMessage(m.chat, { audio: { url: json.data.music}}, {quoted: m})
  XeonBotInc.sendMessage(m.chat, { react: { text: "☑️",key: m.key,}})
 })
 }
